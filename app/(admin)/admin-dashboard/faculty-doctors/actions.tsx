@@ -2,7 +2,6 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-// جلب كل الدكاترة
 export async function getFacultyDoctors() {
   try {
     return await prisma.facultyDoctor.findMany({
@@ -13,7 +12,6 @@ export async function getFacultyDoctors() {
   }
 }
 
-// إضافة دكتور جديد
 export async function addFacultyDoctorAction(formData: FormData) {
   const name = formData.get("name") as string;
   const academicTitle = formData.get("academicTitle") as string;
@@ -25,14 +23,13 @@ export async function addFacultyDoctorAction(formData: FormData) {
       data: { name, academicTitle }
     });
     revalidatePath("/admin-dashboard/faculty-doctors");
-    revalidatePath("/admin-dashboard/theses"); // عشان يظهر في صفحة الرسائل
+    revalidatePath("/admin-dashboard/theses"); 
     return { success: true };
   } catch (error) {
     return { error: "حدث خطأ أثناء إضافة المشرف" };
   }
 }
 
-// تعديل بيانات دكتور
 export async function updateFacultyDoctorAction(formData: FormData) {
   const id = formData.get("id") as string;
   const name = formData.get("name") as string;
@@ -53,7 +50,6 @@ export async function updateFacultyDoctorAction(formData: FormData) {
   }
 }
 
-// حذف دكتور (اختياري لو احتجته)
 export async function deleteFacultyDoctorAction(id: string) {
   try {
     await prisma.facultyDoctor.delete({ where: { id } });

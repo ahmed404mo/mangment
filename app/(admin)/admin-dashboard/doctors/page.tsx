@@ -14,17 +14,14 @@ export default function DoctorManagement() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // State للتعديل
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: "", academicTitle: "" });
 
-  // State للحذف والتنبيهات
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [popup, setPopup] = useState<{ show: boolean; message: string; type: "success" | "error" }>({
     show: false, message: "", type: "success",
   });
 
-  // دالة إظهار التنبيه
   const showPopup = (message: string, type: "success" | "error") => {
     setPopup({ show: true, message, type });
     if (type === "success") {
@@ -32,7 +29,6 @@ export default function DoctorManagement() {
     }
   };
 
-  // تحميل البيانات
   useEffect(() => {
     if (activeTab === "list") loadAccounts();
   }, [activeTab]);
@@ -42,7 +38,6 @@ export default function DoctorManagement() {
     setAccounts(data);
   };
 
-  // --- دوال التحكم (المهمة لحل الخطأ) ---
   const handleEditClick = (acc: any) => {
     setEditingId(acc.id);
     setEditForm({ name: acc.name, academicTitle: acc.academicTitle });
@@ -82,10 +77,9 @@ export default function DoctorManagement() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 px-4 relative" dir="rtl">
       
-      {/* 1. Popup Notification */}
       <AnimatePresence>
         {popup.show && (
-          <motion.div initial={{ opacity: 0, y: -50, x: "-50%" }} animate={{ opacity: 1, y: 20, x: "-50%" }} exit={{ opacity: 0, y: -50, x: "-50%" }} className="fixed top-5 left-1/2 z-[100] min-w-[320px]">
+          <motion.div initial={{ opacity: 0, y: -50, x: "-50%" }} animate={{ opacity: 1, y: 20, x: "-50%" }} exit={{ opacity: 0, y: -50, x: "-50%" }} className="fixed top-5 left-1/2 z-[9999] min-w-[320px]">
             <div className={`p-4 rounded-2xl shadow-2xl backdrop-blur-xl border flex items-center gap-4 ${popup.type === "success" ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-rose-600/90 border-rose-400 text-white"}`}>
               <div className="bg-white/20 p-2 rounded-xl">{popup.type === "success" ? <Check size={20}/> : <AlertCircle size={20}/>}</div>
               <p className="font-black text-sm flex-1">{popup.message}</p>
@@ -95,17 +89,28 @@ export default function DoctorManagement() {
         )}
       </AnimatePresence>
 
-      {/* 2. Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteConfirm && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteConfirm(null)} className="absolute inset-0 bg-slate-950/40 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center border border-slate-100">
-              <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6"><AlertCircle size={40} /></div>
+          <div className="fixed inset-0 w-screen h-screen z-[9999] flex items-center justify-center top-0 left-0 m-0 p-0 overflow-hidden">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setDeleteConfirm(null)} 
+              className="absolute inset-0 w-full h-full bg-slate-950/60 backdrop-blur-sm" 
+            />
+            
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 0.9, opacity: 0 }} 
+              className="relative z-10 bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-[90%] md:w-full text-center border border-slate-100 mx-auto"
+            >
+              <div className="w-20 h-sc bg-rose-50 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6"><AlertCircle size={40} /></div>
               <h3 className="text-xl font-black text-slate-900 mb-2">تأكيد الحذف</h3>
               <p className="text-slate-500 font-bold text-sm mb-8">هل أنت متأكد من حذف هذا الحساب نهائياً؟</p>
               <div className="flex gap-3">
-                <button onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex-1 bg-rose-600 text-white py-4 rounded-2xl font-black hover:bg-rose-700 transition-all">نعم، احذف</button>
+                <button onClick={() => handleDelete(deleteConfirm)} disabled={loading} className="flex-1 bg-rose-600 text-white py-4 rounded-2xl font-black hover:bg-rose-700 transition-all">{loading ? "جاري الحذف..." : "نعم، احذف"}</button>
                 <button onClick={() => setDeleteConfirm(null)} className="flex-1 bg-slate-100 text-slate-600 py-4 rounded-2xl font-black hover:bg-slate-200">إلغاء</button>
               </div>
             </motion.div>
@@ -113,8 +118,7 @@ export default function DoctorManagement() {
         )}
       </AnimatePresence>
 
-      {/* 3. Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white shadow-2xl shadow-slate-200/50">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white shadow-2xl shadow-slate-200/50 relative z-10">
         <div className="flex items-center gap-5">
           <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-500/40 rotate-3 transition-transform duration-300">
             <UserPlus size={30} className="text-white" />
@@ -125,7 +129,6 @@ export default function DoctorManagement() {
           </div>
         </div>
 
-        {/* Tab Switcher */}
         <div className="flex bg-slate-950 p-1.5 rounded-2xl shadow-2xl relative min-w-[320px] border border-white/5">
           <button onClick={() => setActiveTab("add")} className={`relative z-10 flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-sm transition-all duration-300 ${activeTab === "add" ? "text-white" : "text-slate-500 hover:text-slate-300"}`}><UserPlus size={18} /> إضافة حساب</button>
           <button onClick={() => setActiveTab("list")} className={`relative z-10 flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-sm transition-all duration-300 ${activeTab === "list" ? "text-white" : "text-slate-500 hover:text-slate-300"}`}><ListOrdered size={18} /> سجل البيانات</button>
@@ -135,7 +138,7 @@ export default function DoctorManagement() {
 
       <AnimatePresence mode="wait">
         {activeTab === "add" ? (
-          <motion.div key="add-tab" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white border border-slate-200 p-10 rounded-[2.5rem] shadow-2xl max-w-2xl mx-auto relative overflow-hidden">
+          <motion.div key="add-tab" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white border border-slate-200 p-10 rounded-[2.5rem] shadow-2xl max-w-2xl mx-auto relative overflow-hidden z-10">
             <div className="absolute top-0 right-0 w-2 h-full bg-blue-600 shadow-[0_0_15px_rgba(37,99,235,0.5)]" />
             <h2 className="text-xl font-black text-slate-900 mb-8 flex items-center gap-3"><CheckCircle2 size={22} className="text-blue-600"/> إنشاء حساب جديد</h2>
             <form action={async (fd) => { setLoading(true); const res = await addDoctorAction(fd); setLoading(false); if (res.success) showPopup("تم توليد الحساب بنجاح", "success"); else showPopup(res.error || "خطأ", "error"); }} className="space-y-6">
@@ -151,7 +154,7 @@ export default function DoctorManagement() {
             </form>
           </motion.div>
         ) : (
-          <motion.div key="list-tab" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+          <motion.div key="list-tab" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6 relative z-10">
             <div className="bg-white/80 backdrop-blur-md p-3 px-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4 max-w-md mr-auto focus-within:border-blue-400 transition-all">
               <Search className="text-slate-400" size={20} />
               <input type="text" placeholder="ابحث بالاسم أو الكود..." className="bg-transparent w-full outline-none font-bold text-slate-800 text-sm" onChange={(e) => setSearchTerm(e.target.value)} />

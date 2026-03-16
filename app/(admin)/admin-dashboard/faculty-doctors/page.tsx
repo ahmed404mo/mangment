@@ -77,7 +77,7 @@ export default function FacultyDoctorsPage() {
       {/* 1. Notification Popup */}
       <AnimatePresence>
         {popup.show && (
-          <motion.div initial={{ opacity: 0, y: -50, x: "-50%" }} animate={{ opacity: 1, y: 20, x: "-50%" }} exit={{ opacity: 0, y: -50, x: "-50%" }} className="fixed top-5 left-1/2 z-[200] min-w-[320px]">
+          <motion.div initial={{ opacity: 0, y: -50, x: "-50%" }} animate={{ opacity: 1, y: 20, x: "-50%" }} exit={{ opacity: 0, y: -50, x: "-50%" }} className="fixed top-5 left-1/2 z-[99999] min-w-[320px]">
             <div className={`p-4 rounded-2xl shadow-2xl border flex items-center gap-4 backdrop-blur-xl ${popup.type === 'success' ? 'bg-emerald-500/90 border-emerald-400 text-white' : 'bg-rose-600/90 border-rose-400 text-white'}`}>
               <div className="bg-white/20 p-2 rounded-xl">{popup.type === 'success' ? <Check size={20}/> : <AlertCircle size={20}/>}</div>
               <p className="font-black text-sm flex-1">{popup.msg}</p>
@@ -90,15 +90,15 @@ export default function FacultyDoctorsPage() {
       {/* 2. Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteConfirm && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteConfirm(null)} className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center border border-slate-100">
+          <div className="fixed inset-0 w-screen h-screen z-[99999] flex items-center justify-center top-0 left-0 m-0 p-0 overflow-hidden">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setDeleteConfirm(null)} className="absolute inset-0 w-full h-full bg-slate-950/60 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="relative z-10 bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-[90%] md:w-full text-center border border-slate-100 mx-auto">
               <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4"><Trash2 size={32} /></div>
               <h3 className="text-xl font-black text-slate-900 mb-2">تأكيد الحذف</h3>
               <p className="text-slate-500 font-bold text-sm mb-6 leading-relaxed">هل أنت متأكد من حذف <span className="text-rose-600">{deleteConfirm.name}</span>؟ لا يمكن التراجع عن هذا الإجراء.</p>
               <div className="flex gap-2">
-                <button onClick={confirmDelete} className="flex-1 bg-rose-600 text-white py-3 rounded-xl font-black hover:bg-rose-700 transition-all">حذف نهائي</button>
-                <button onClick={() => setDeleteConfirm(null)} className="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-black">إلغاء</button>
+                <button onClick={confirmDelete} className="flex-1 bg-rose-600 text-white py-3 rounded-xl font-black hover:bg-rose-700 transition-all active:scale-95">حذف نهائي</button>
+                <button onClick={() => setDeleteConfirm(null)} className="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-black active:scale-95 hover:bg-slate-200 transition-all">إلغاء</button>
               </div>
             </motion.div>
           </div>
@@ -106,7 +106,7 @@ export default function FacultyDoctorsPage() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex items-center gap-5 border-b border-slate-200 pb-8">
+      <div className="flex items-center gap-5 border-b border-slate-200 pb-8 relative z-10">
         <div className="p-4 bg-slate-950 rounded-[1.5rem] text-white shadow-2xl shadow-slate-200">
           <UserCog size={32} />
         </div>
@@ -116,7 +116,7 @@ export default function FacultyDoctorsPage() {
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start relative z-10">
         {/* Form Column */}
         <div className="lg:col-span-4">
           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-2xl shadow-slate-100 sticky top-10">

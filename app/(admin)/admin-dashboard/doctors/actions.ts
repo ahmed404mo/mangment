@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { revalidatePath } from "next/cache";
 
-// جلب الحسابات المسجلة
 export async function getDoctorAccounts() {
   try {
     const accounts = await prisma.user.findMany({
@@ -18,14 +17,12 @@ export async function getDoctorAccounts() {
   }
 }
 
-// إضافة حساب جديد وتوليد بيانات الدخول
 export async function addDoctorAction(formData: FormData) {
   const name = formData.get("name") as string;
   const academicTitle = formData.get("academicTitle") as string;
   
   if (!name || name.length < 3) return { error: "الاسم قصير جداً" };
 
-  // توليد الكود والباسوورد
   const doctorCode = `USR-${Math.floor(1000 + Math.random() * 9000)}`;
   const plainPassword = "Pass@" + Math.floor(100 + Math.random() * 900); 
   const hashedPassword = await bcrypt.hash(plainPassword, 10);
@@ -37,7 +34,7 @@ export async function addDoctorAction(formData: FormData) {
         academicTitle,
         doctorCode,
         password: hashedPassword,
-        tempPassword: plainPassword, // حفظ النسخة النصية للرجوع إليها
+        tempPassword: plainPassword,
         role: "DOCTOR",
       },
     });
@@ -53,7 +50,6 @@ export async function addDoctorAction(formData: FormData) {
     return { error: "حدث خطأ أثناء الإنشاء، ربما الكود مكرر، حاول مرة أخرى" };
   }
 }
-// دالة تحديث بيانات الدكتور (الاسم والدرجة العلمية)
 export async function updateDoctorAction(id: string, data: { name: string, academicTitle: string }) {
   try {
     if (!data.name || data.name.length < 3) {
@@ -68,7 +64,6 @@ export async function updateDoctorAction(id: string, data: { name: string, acade
       },
     });
 
-    // تحديث الصفحة فوراً ليعكس التغييرات
     revalidatePath("/admin-dashboard/doctors");
     
     return { success: true };
@@ -107,8 +102,8 @@ export async function deleteDoctorAction(id: string) {
     });
     revalidatePath("/admin-dashboard/doctors");
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting doctor:", error);
-    return { error: "لا يمكن حذف هذا الحساب لوجود بيانات مرتبطة به" };
+    return { error: error.message || "حدث خطأ غير معروف أثناء الحذف" };
   }
 }

@@ -77,7 +77,7 @@ model Thesis {
 model Promotion {
   id            String   @id @default(cuid())
   doctorId      String
-  doctor        FacultyDoctor @relation(fields: [doctorId], references: [id])
+  doctor        FacultyDoctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   oldTitle      String
   newTitle      String
   promotionDate DateTime @default(now())
@@ -92,17 +92,12 @@ model Notification {
 }
 
 model Supervision {
-  id                 String         @id @default(cuid())
+  id                 String            @id @default(cuid())
   thesisId           String
-  
-  // ضيف الـ onDelete: Cascade هنا في العلاقة مع الرسالة
-  thesis             Thesis         @relation(fields: [thesisId], references: [id], onDelete: Cascade)
-  
+  thesis             Thesis            @relation(fields: [thesisId], references: [id], onDelete: Cascade)
   doctorId           String?
-  doctor             FacultyDoctor? @relation(fields: [doctorId], references: [id])
-
+  doctor             FacultyDoctor?    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
   externalExaminerId String?
   externalExaminer   ExternalExaminer? @relation(fields: [externalExaminerId], references: [id])
-
   supervisionRole    String  
 }
