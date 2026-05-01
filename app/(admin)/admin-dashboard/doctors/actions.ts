@@ -108,14 +108,32 @@ export async function deleteDoctorAction(id: string) {
     return { error: error.message || "حدث خطأ غير معروف أثناء الحذف" };
   }
 }
-
-export async function bulkAddDoctorsAction(doctors: Array<{ name: string; academicTitle: string }>) {
+// أضف هذه الدالة إلى ملف actions.ts
+export async function bulkAddDoctorsAction(doctorsData: any[]) {
   try {
     const results = [];
+    let successCount = 0;
+    let errorCount = 0;
     
-    for (const doctor of doctors) {
+    for (const doctor of doctorsData) {
+      // التحقق من صحة البيانات
       if (!doctor.name || doctor.name.length < 3) {
-        results.push({ error: `الاسم "${doctor.name}" قصير جداً`, doctor });
+        results.push({ 
+          error: `الاسم "${doctor.name}" قصير جداً (يجب 3 أحرف على الأقل)`, 
+          doctor,
+          status: 'error'
+        });
+        errorCount++;
+        continue;
+      }
+
+      if (!doctor.academicTitle) {
+        results.push({ 
+          error: `اللقب العلمي مطلوب للدكتور "${doctor.name}"`, 
+          doctor,
+          status: 'error'
+        });
+        errorCount++;
         continue;
       }
 
@@ -139,15 +157,28 @@ export async function bulkAddDoctorsAction(doctors: Array<{ name: string; academ
           success: true, 
           doctorCode: newUser.doctorCode, 
           password: plainPassword,
-          doctor 
+          name: doctor.name,
+          status: 'success'
         });
+        successCount++;
       } catch (error) {
-        results.push({ error: "حدث خطأ أثناء الإنشاء", doctor });
+        results.push({ 
+          error: "حدث خطأ أثناء إنشاء الحساب", 
+          doctor,
+          status: 'error'
+        });
+        errorCount++;
       }
     }
 
     revalidatePath("/admin-dashboard/doctors");
-    return { success: true, results };
+    return { 
+      success: true, 
+      results,
+      successCount,
+      errorCount,
+      total: doctorsData.length
+    };
   } catch (error) {
     console.error("Error bulk adding doctors:", error);
     return { error: "حدث خطأ أثناء الإضافة الجماعية" };
