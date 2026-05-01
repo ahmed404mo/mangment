@@ -3,27 +3,35 @@ import {
   FileText, 
   Users, 
   GraduationCap, 
-  ChevronLeft,
-  Plus
+  Plus,
+  UserCircle,
+  UserCheck,     // ✅ أيقونة جديدة للأطباء (أكثر احترافية للمجتمع الأكاديمي)
+  Globe,
 } from "lucide-react";
 import Link from "next/link";
 import ThesisList from "./thesis-list";
 
 export default async function AdminDashboardHome() {
-  const [thesesCount, facultyCount, masterCount, phdCount, recentTheses] = await Promise.all([
+  const [thesesCount, facultyCount, externalExaminersCount, totalUsers, doctorsCount, masterCount, phdCount, recentTheses] = await Promise.all([
     prisma.thesis.count(),
-    prisma.facultyDoctor.count(), // تأكدت من استخدام FacultyDoctor
+    prisma.facultyDoctor.count(),
+    prisma.externalExaminer.count(),
+    prisma.user.count(),                              // إجمالي جميع المستخدمين
+    prisma.user.count({ where: { role: "DOCTOR" } }), // ✅ الدكاترة فقط
     prisma.thesis.count({ where: { type: "MASTER" } }),
     prisma.thesis.count({ where: { type: "PHD" } }),
     prisma.thesis.findMany({
       orderBy: { registrationDate: 'desc' },
-      take: 10
+      take: 10,
     })
   ]);
 
   const stats = [
     { label: "إجمالي الرسائل", value: thesesCount, icon: FileText, color: "bg-blue-600" },
     { label: "أعضاء هيئة التدريس", value: facultyCount, icon: Users, color: "bg-slate-900" },
+    { label: "المناقشين الخارجيين", value: externalExaminersCount, icon: Globe, color: "bg-orange-600" },
+    { label: "إجمالي المستخدمين", value: totalUsers, icon: UserCircle, color: "bg-emerald-600" },
+    { label: "الدكاترة", value: doctorsCount, icon: UserCheck, color: "bg-indigo-600" }, // ✅ اسم وأيقونة جديدة
     { label: "درجة الماجستير", value: masterCount, icon: GraduationCap, color: "bg-purple-600" },
     { label: "درجة الدكتوراه", value: phdCount, icon: GraduationCap, color: "bg-amber-500" },
   ];
@@ -49,20 +57,20 @@ export default async function AdminDashboardHome() {
         </Link>
       </div>
 
-      {/* Grid Stats - Modern Style */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      {/* Grid Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7 gap-6">
         {stats.map((stat, index) => (
-          <div key={index} className="relative group overflow-hidden bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-100/50 hover:-translate-y-2 transition-all duration-500">
+          <div key={index} className="relative group overflow-hidden bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-100/50 hover:-translate-y-2 transition-all duration-500">
             <div className={`absolute top-0 right-0 w-2 h-full ${stat.color} opacity-20`} />
-            <div className="flex items-center justify-between mb-6">
-              <div className={`${stat.color} text-white p-4 rounded-3xl shadow-lg shadow-slate-200`}>
-                <stat.icon size={28} />
+            <div className="flex items-center justify-between mb-4">
+              <div className={`${stat.color} text-white p-3 rounded-2xl shadow-lg shadow-slate-200`}>
+                <stat.icon size={24} />
               </div>
-              <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest rotate-90">Live Data</div>
+              <div className="text-[8px] font-black text-slate-300 uppercase tracking-widest rotate-90">Live</div>
             </div>
             <div>
-              <p className="text-slate-400 text-sm font-black mb-1">{stat.label}</p>
-              <div className="text-4xl font-black text-slate-950 tabular-nums tracking-tighter">{stat.value}</div>
+              <p className="text-slate-400 text-xs font-black mb-1">{stat.label}</p>
+              <div className="text-3xl font-black text-slate-950 tabular-nums tracking-tighter">{stat.value}</div>
             </div>
           </div>
         ))}

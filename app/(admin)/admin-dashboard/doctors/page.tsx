@@ -16,13 +16,11 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function DoctorManagement() {
-  // ✅ تبويب Excel هو الأول الآن (القيمة الافتراضية "excel")
   const [activeTab, setActiveTab] = useState<"excel" | "add" | "list">("excel");
   const [accounts, setAccounts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // ✅ حالات رفع Excel
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadStatus, setUploadStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [uploadMessage, setUploadMessage] = useState("");
@@ -82,12 +80,10 @@ export default function DoctorManagement() {
     setLoading(false);
   };
 
-  // ✅ دالة رفع Excel مع شريط التقدم
   const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // التحقق من صيغة الملف
     const extension = file.name.split('.').pop()?.toLowerCase();
     if (extension !== 'xlsx' && extension !== 'xls') {
       showPopup("الرجاء رفع ملف Excel فقط (.xlsx أو .xls)", "error");
@@ -98,7 +94,6 @@ export default function DoctorManagement() {
     setUploadProgress(0);
     setUploadMessage("");
 
-    // محاكاة تقدم التحميل (0% -> 90%)
     const progressInterval = setInterval(() => {
       setUploadProgress(prev => {
         if (prev >= 90) {
@@ -121,7 +116,6 @@ export default function DoctorManagement() {
         const worksheet = workbook.Sheets[sheetName];
         const excelData = XLSX.utils.sheet_to_json(worksheet);
 
-        // تنسيق البيانات
         const formattedData = excelData.map((row: any) => ({
           doctorCode: String(row["User Id"] || row["userId"] || row["كود"] || "").trim(),
           name: String(row["Dr Name"] || row["name"] || row["الاسم"] || "").trim(),
@@ -138,7 +132,6 @@ export default function DoctorManagement() {
           return;
         }
 
-        // تحديث التقدم إلى 95%
         setUploadProgress(95);
 
         const res = await bulkAddDoctorsAction(formattedData);
@@ -152,7 +145,6 @@ export default function DoctorManagement() {
           showPopup(`تم استيراد ${res.count || formattedData.length} حساب بنجاح!`, "success");
           e.target.value = '';
           
-          // بعد 1.5 ثانية انتقل إلى تبويب السجل
           setTimeout(() => {
             setActiveTab("list");
             setUploadStatus("idle");
@@ -215,7 +207,6 @@ export default function DoctorManagement() {
         )}
       </AnimatePresence>
 
-      {/* Header and Tabs Navigation - ✅ Excel هو أول تبويب الآن */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white shadow-2xl shadow-slate-200/50 relative z-10">
         <div className="flex items-center gap-5">
           <div className="w-14 h-14 bg-gradient-to-tr from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-500/40 rotate-3 transition-transform duration-300">
@@ -227,7 +218,6 @@ export default function DoctorManagement() {
           </div>
         </div>
 
-        {/* ✅ ترتيب التبويبات: Excel أولاً */}
         <div className="flex bg-slate-950 p-1.5 rounded-2xl shadow-2xl relative min-w-[420px] border border-white/5">
           <button onClick={() => setActiveTab("excel")} className={`relative z-10 flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-sm transition-all duration-300 ${activeTab === "excel" ? "text-white" : "text-slate-500 hover:text-slate-300"}`}><FileSpreadsheet size={18} /> رفع Excel</button>
           <button onClick={() => setActiveTab("add")} className={`relative z-10 flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-black text-sm transition-all duration-300 ${activeTab === "add" ? "text-white" : "text-slate-500 hover:text-slate-300"}`}><UserPlus size={18} /> إضافة فردية</button>
@@ -247,7 +237,6 @@ export default function DoctorManagement() {
 
       <AnimatePresence mode="wait">
         
-        {/* ✅ تبويب Excel - الأول مع شريط التقدم */}
         {activeTab === "excel" && (
           <motion.div key="excel-tab" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="bg-white border border-slate-200 p-10 rounded-[2.5rem] shadow-2xl max-w-3xl mx-auto relative overflow-hidden z-10 text-center">
             <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
