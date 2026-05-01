@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, GraduationCap, CalendarDays, Users, BookMarked, Sparkles, ChevronDown, ChevronUp, X, Info, User, AlertTriangle } from "lucide-react";
+import { Search, GraduationCap, CalendarDays, Users, BookMarked, Sparkles, ChevronDown, ChevronUp, X, Info, User, AlertTriangle, FileText, FolderOpen, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
@@ -18,6 +18,9 @@ const sliderColors = [
   "bg-gradient-to-br from-emerald-900 to-emerald-800",
   "bg-gradient-to-br from-indigo-900 to-indigo-800",
 ];
+
+// عدد العناصر في كل صفحة
+const ITEMS_PER_PAGE = 9;
 
 // دالة جلب شارات الحالة
 const getStatusBadge = (status: string) => {
@@ -63,11 +66,20 @@ const ThesisCard = ({ thesis, onClick, colorTheme }: { thesis: any; onClick: () 
           </div>
         </div>
         
-        <h3 className={`text-lg font-black leading-snug mb-6 transition-colors line-clamp-3 ${
+        <h3 className={`text-lg font-black leading-snug mb-4 transition-colors line-clamp-3 ${
           isColored ? "text-white" : "text-slate-900 group-hover:text-blue-600"
         }`}>
           {thesis.title}
         </h3>
+        
+        {thesis.department && (
+          <div className={`flex items-center gap-2 text-xs font-bold mb-3 ${
+            isColored ? "text-emerald-300" : "text-emerald-600"
+          }`}>
+            <FolderOpen size={12} />
+            <span>{thesis.department}</span>
+          </div>
+        )}
         
         <div className={`space-y-3 font-bold text-sm mt-auto ${isColored ? "text-slate-300" : "text-slate-500"}`}>
           <div className="flex items-center gap-2">
@@ -93,16 +105,101 @@ const ThesisCard = ({ thesis, onClick, colorTheme }: { thesis: any; onClick: () 
   );
 };
 
+// مكون أزرار التقسيم (Pagination)
+const PaginationControls = ({ currentPage, totalPages, onPageChange }: { currentPage: number; totalPages: number; onPageChange: (page: number) => void }) => {
+  if (totalPages <= 1) return null;
+  
+  // حساب نطاق الأرقام التي تظهر
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 5; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 4; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
+  return (
+    <div className="flex justify-center items-center gap-2 mt-12 pb-8" dir="ltr">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className={`p-2 rounded-xl border transition-all ${
+          currentPage === 1 
+            ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed' 
+            : 'bg-white border-slate-200 text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600'
+        }`}
+      >
+        <ChevronRight size={20} />
+      </button>
+      
+      {getPageNumbers().map((page, idx) => (
+        <button
+          key={idx}
+          onClick={() => typeof page === 'number' && onPageChange(page)}
+          className={`min-w-[40px] h-10 rounded-xl font-black text-sm transition-all ${
+            currentPage === page
+              ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
+              : typeof page === 'number'
+                ? 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                : 'text-slate-400 cursor-default'
+          }`}
+          disabled={typeof page !== 'number'}
+        >
+          {page}
+        </button>
+      ))}
+      
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className={`p-2 rounded-xl border transition-all ${
+          currentPage === totalPages 
+            ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed' 
+            : 'bg-white border-slate-200 text-slate-600 hover:bg-blue-600 hover:text-white hover:border-blue-600'
+        }`}
+      >
+        <ChevronLeft size={20} />
+      </button>
+    </div>
+  );
+};
+
 export default function ThesesClientView({ initialTheses }: { initialTheses: any[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedThesis, setSelectedThesis] = useState<any | null>(null);
   const [showAllMasters, setShowAllMasters] = useState(false);
   const [showAllPhds, setShowAllPhds] = useState(false);
-  const [mounted, setMounted] = useState(false); 
+  const [mounted, setMounted] = useState(false);
+  
+  // ✅ حالات التقسيم (Pagination)
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // إعادة تعيين الصفحة عند تغيير البحث
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // منع التمرير عند فتح النافذة
   useEffect(() => {
@@ -117,7 +214,7 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
   const isSearching = searchTerm.trim() !== "";
 
   // نظام البحث الذكي
-  const searchResults = initialTheses.filter((thesis) => {
+  const filteredTheses = initialTheses.filter((thesis) => {
     if (!searchTerm) return true;
     const terms = searchTerm.toLowerCase().split(" ").filter(Boolean);
     const dateAr = new Date(thesis.registrationDate).toLocaleDateString('ar-EG');
@@ -126,9 +223,14 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
       (s.doctor?.name || s.externalExaminer?.name || "").toLowerCase()
     ).join(" ") || "";
 
-    const searchableString = `${thesis.title.toLowerCase()} ${thesis.studentName.toLowerCase()} ${dateAr} ${year} ${allSupervisors}`;
+    const searchableString = `${thesis.title.toLowerCase()} ${thesis.studentName.toLowerCase()} ${dateAr} ${year} ${allSupervisors} ${thesis.department?.toLowerCase() || ''} ${thesis.notes?.toLowerCase() || ''}`;
     return terms.every(term => searchableString.includes(term));
   });
+
+  // ✅ تقسيم النتائج حسب الصفحة
+  const totalPages = Math.ceil(filteredTheses.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedTheses = filteredTheses.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   const masterTheses = initialTheses.filter(t => t.type === "MASTER");
   const phdTheses = initialTheses.filter(t => t.type === "PHD");
@@ -144,7 +246,6 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
         className="relative bg-slate-950 flex flex-col items-center justify-center overflow-hidden rounded-b-[3rem] sm:rounded-b-[5rem] shadow-2xl -mt-8 md:-mt-12 w-[100vw] ml-[calc(-50vw+50%)] mr-[calc(-50vw+50%)]"
       >
         <div className="absolute inset-0 opacity-20">
-            {/* Speedlines Background Effect */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-500/20 via-transparent to-transparent"></div>
         </div>
         
@@ -171,7 +272,7 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
           </div>
           <input 
             type="text" 
-            placeholder="ابحث عن رسالة، باحث، سنة، أو مشرف..."
+            placeholder="ابحث عن رسالة، باحث، سنة، مشرف، قسم، أو ملاحظات..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="flex-1 bg-transparent px-2 sm:px-4 outline-none font-black text-slate-800 text-sm sm:text-base placeholder:text-slate-400"
@@ -187,27 +288,40 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
       {/* 3. Main Content Area */}
       <div className="max-w-7xl mx-auto px-4 relative z-20">
         {isSearching ? (
-          /* Search Results View */
+          /* Search Results View - مع Pagination */
           <div className="space-y-8 min-h-[50vh]">
-            <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
-              <div className="w-2 h-8 bg-blue-600 rounded-full"></div>
-              نتائج البحث ({searchResults.length})
-            </h2>
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                <div className="w-2 h-8 bg-blue-600 rounded-full"></div>
+                نتائج البحث ({filteredTheses.length})
+              </h2>
+              <div className="text-sm text-slate-400 font-bold">
+                صفحة {currentPage} من {totalPages || 1}
+              </div>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in duration-500">
-              {searchResults.map(t => <ThesisCard key={t.id} thesis={t} onClick={() => setSelectedThesis(t)} />)}
-              {searchResults.length === 0 && (
+              {paginatedTheses.map(t => <ThesisCard key={t.id} thesis={t} onClick={() => setSelectedThesis(t)} />)}
+              {paginatedTheses.length === 0 && (
                 <div className="col-span-full py-24 text-center bg-white rounded-[3.5rem] border-2 border-dashed border-slate-100 shadow-sm">
                   <AlertTriangle className="mx-auto text-slate-200 mb-4" size={64} />
                   <p className="font-black text-slate-400 text-xl">لا توجد نتائج تطابق بحثك حالياً</p>
                 </div>
               )}
             </div>
+            
+            {/* ✅ أزرار التقسيم */}
+            <PaginationControls 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         ) : (
           /* Normal Home View */
           <div className="space-y-24">
             
-            {/* Slider Section */}
+            {/* Slider Section - بدون Pagination (يبقى كما هو) */}
             {sliderTheses.length > 0 && (
               <div className="space-y-8">
                 <div className="flex items-center gap-4">
@@ -237,7 +351,7 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
               </div>
             )}
 
-            {/* Categorized Lists */}
+            {/* Categorized Lists - هنضيف Pagination هنا برضو */}
             <div className="grid gap-20">
               {[
                 { title: "رسائل الدكتوراه", data: phdTheses, show: showAllPhds, setShow: setShowAllPhds, icon: <GraduationCap size={24}/>, color: "bg-slate-950" },
@@ -277,7 +391,7 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
         )}
       </div>
 
-      {/* 4. Responsive Modal - متجاوب كلياً */}
+      {/* 4. Responsive Modal - كما هو */}
       {mounted && createPortal(
         <AnimatePresence>
           {selectedThesis && (
@@ -299,11 +413,16 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
                   <button onClick={() => setSelectedThesis(null)} className="absolute left-6 top-6 p-2 bg-white/10 hover:bg-rose-500 rounded-full transition-colors text-white z-20">
                     <X size={20}/>
                   </button>
-                  <div className="flex gap-2 mb-4 relative z-10">
+                  <div className="flex flex-wrap gap-2 mb-4 relative z-10">
                     <span className="bg-blue-600 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest">
                       {selectedThesis.type === "MASTER" ? "ماجستير" : "دكتوراه"}
                     </span>
                     {getStatusBadge(selectedThesis.status)}
+                    {selectedThesis.department && (
+                      <span className="bg-emerald-600 text-white px-3 py-1 rounded-lg text-[10px] font-black flex items-center gap-1">
+                        <FolderOpen size={10} /> {selectedThesis.department}
+                      </span>
+                    )}
                   </div>
                   <h2 className="text-xl sm:text-3xl font-black leading-tight text-white relative z-10">{selectedThesis.title}</h2>
                 </div>
@@ -327,6 +446,37 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedThesis.department && (
+                      <div className="flex items-center gap-4 bg-emerald-50 p-5 rounded-[1.5rem] border border-emerald-100">
+                        <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600 shrink-0"><FolderOpen size={22} /></div>
+                        <div>
+                          <p className="text-[10px] font-black text-emerald-600 uppercase">القسم الأكاديمي</p>
+                          <p className="font-black text-slate-900 text-lg">{selectedThesis.department}</p>
+                        </div>
+                      </div>
+                    )}
+                    {selectedThesis.researchType && (
+                      <div className="flex items-center gap-4 bg-purple-50 p-5 rounded-[1.5rem] border border-purple-100">
+                        <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600 shrink-0"><FileText size={22} /></div>
+                        <div>
+                          <p className="text-[10px] font-black text-purple-600 uppercase">نوع البحث</p>
+                          <p className="font-black text-slate-900 text-lg">{selectedThesis.researchType}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {selectedThesis.notes && (
+                    <div className="bg-amber-50 p-5 rounded-[1.5rem] border border-amber-100">
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertTriangle size={18} className="text-amber-500" />
+                        <h4 className="font-black text-amber-700 text-sm uppercase tracking-widest">ملاحظات إضافية</h4>
+                      </div>
+                      <p className="text-slate-700 font-medium leading-relaxed">{selectedThesis.notes}</p>
+                    </div>
+                  )}
+
                   <div className="space-y-4">
                     <h4 className="font-black text-slate-900 flex items-center gap-2 text-xl"><Users size={24} className="text-blue-600" /> هيئة الإشراف والمناقشة</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -342,7 +492,6 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
                   </div>
                 </div>
 
-                {/* Modal Footer Button */}
                 <div className="p-6 sm:p-10 pt-0 bg-white">
                   <button 
                     onClick={() => setSelectedThesis(null)} 
@@ -358,7 +507,6 @@ export default function ThesesClientView({ initialTheses }: { initialTheses: any
         document.body
       )}
 
-      {/* تنسيقات CSS إضافية */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
